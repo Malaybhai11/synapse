@@ -1,41 +1,141 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+.env
+prompts/patterns/user/
+/notebooks/
+data/
+.uploads/
+sqlite-db/
+surreal-data/
+docker.env
+notebook_data/
+# Python-specific
+*.py[cod]
+__pycache__/
+*.so
+todo.md
+temp/
+google-credentials.json
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+/lib/
+/lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# PyInstaller
+*.manifest
+*.spec
 
-# testing
-/coverage
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
 
-# next.js
-/.next/
-/out/
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
 
-# production
-/build
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# misc
+# IPython
+profile_default/
+ipython_config.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# macOS
 .DS_Store
-*.pem
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+# Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
 
-# env files (can opt-in for committing if needed)
-.env*
+# Linux
+*~
 
-# vercel
-.vercel
+# Log files
+*.log
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Database files
+*.db
+*.sqlite3
+
+.quarentena
+
+claude-logs/
+.claude/sessions
+**/claude-logs
+
+
+docs/custom_gpt
+doc_exports/
+
+specs/
+.claude
+.sisyphus
+
+.playwright-mcp/
+
+
+
+*.local.yml
+**/*.local.md
