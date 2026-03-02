@@ -7,15 +7,39 @@
     "properties": {
         "id": {
             "type": "string",
-            "description": "Unique identifier for the claim."
+            "description": "Unique identifier for the claim.",
+            "pattern": "^[a-zA-Z0-9_-]{8,64}$"
         },
         "text": {
             "type": "string",
-            "description": "The textual content of the claim."
+            "description": "The textual content of the claim.",
+            "maxLength": 1000
+        },
+        "polarity": {
+            "type": "string",
+            "enum": [
+                "supports",
+                "opposes",
+                "neutral"
+            ],
+            "description": "The stance of this claim relative to the research topic."
+        },
+        "subject": {
+            "type": "string",
+            "description": "The subject of the claim."
+        },
+        "predicate": {
+            "type": "string",
+            "description": "The action or property attributed to the subject."
+        },
+        "object": {
+            "type": "string",
+            "description": "The entity or value receiving the action or completing the property."
         },
         "evidence": {
             "type": "string",
-            "description": "A brief snippet or summary of evidence backing this claim."
+            "description": "A brief snippet or summary of evidence backing this claim.",
+            "maxLength": 2000
         },
         "source_id": {
             "type": "string",
@@ -31,7 +55,9 @@
     "required": [
         "id",
         "text",
+        "polarity",
         "source_id",
         "confidence"
-    ]
+    ],
+    "additionalProperties": false
 }

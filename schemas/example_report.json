@@ -1,61 +1,100 @@
 {
-    "id": "report_12345",
-    "query": "Impact of quantum computing on modern cryptography",
-    "timestamp": "2026-03-02T23:07:47Z",
-    "executive_summary": "Quantum computing poses a significant future risk to current asymmetric cryptographic standards like RSA and ECC, primarily due to Shor's algorithm.",
+    "id": "report_12345678",
+    "query": "Quantum Computing Impact on Cryptography Security Standards",
+    "timestamp": "2026-03-02T23:07:47.123Z",
+    "executive_summary": "Quantum computing represents an existential threat to asymmetric cryptographic algorithms that underpin the security of current digital communications. Shor's algorithm, which can solve factorization and discrete logarithm problems in polynomial time, renders systems like RSA, Diffie-Hellman, and Elliptic Curve Cryptography (ECC) vulnerable. This report highlights the necessity of transitioning to post-quantum cryptography (PQC) standards, specifically those being vetted by NIST, to ensure long-term data confidentiality and identity authentication in an era where large-scale, fault-tolerant quantum computers might exist. The immediate risk primarily concerns 'harvest now, decrypt later' attacks where adversaries store encrypted data for future decryption using future quantum hardware.",
     "technical_breakdown": [
         {
-            "topic": "Shor's Algorithm",
-            "text": "Shor's algorithm can factor large integers and compute discrete logarithms in polynomial time, unlike classical algorithms which take exponential time. This breaks RSA and ECC.",
-            "evidence": "Doc1 section 4 details exponential speedup using QFT."
+            "topic": "Shor's Algorithm Mechanics",
+            "text": "Shor's algorithm achieves an exponential speedup by utilizing quantum Fourier transforms to find the period of a periodic modular exponentiation function. Once the period is found, factorization of large products of primes is trivial.",
+            "evidence": "Observed in Peter Shor's 1994 paper; theoretical foundation proven."
+        },
+        {
+            "topic": "NIST Post-Quantum Cryptography Standardization",
+            "text": "The NIST competition has selected algorithms like CRYSTALS-Kyber for key encapsulation and CRYSTALS-Dilithium for digital signatures as primary candidates for the standardized PQC suite.",
+            "evidence": "NIST Selects First Group of Encryption Algorithms to Endure Quantum Attack (2022)."
         }
     ],
     "comparison_table": {
         "columns": [
-            "Cryptosystem",
-            "Classical Security",
-            "Post-Quantum Security"
+            "Algorithm Family",
+            "Classic Security level (bits)",
+            "Quantum Security Status",
+            "Parameter Size Considerations"
         ],
         "rows": [
             {
-                "Cryptosystem": "RSA-2048",
-                "Classical Security": "High",
-                "Post-Quantum Security": "Vulnerable"
+                "Algorithm Family": "RSA-2048",
+                "Classic Security level (bits)": "112",
+                "Quantum Security Status": "Broken (Shor's)",
+                "Parameter Size Considerations": "Moderate key size (2048 bits)"
             },
             {
-                "Cryptosystem": "Lattice-based (Kyber)",
-                "Classical Security": "High",
-                "Post-Quantum Security": "Resistant"
+                "Algorithm Family": "ECC-256",
+                "Classic Security level (bits)": "128",
+                "Quantum Security Status": "Broken (Shor's)",
+                "Parameter Size Considerations": "Small key size"
+            },
+            {
+                "Algorithm Family": "Lattice (Kyber-768)",
+                "Classic Security level (bits)": "192",
+                "Quantum Security Status": "Secure (Currently)",
+                "Parameter Size Considerations": "Significant larger key/ciphertext (1184 bytes)"
             }
         ]
     },
     "pros": [
-        "Transition to PQC (Post-Quantum Cryptography) encourages cryptographic agility."
+        "Drives innovation in cryptographic agility and performance optimization for new algorithms.",
+        "Forces a necessary cleanup of legacy cryptographic infrastructure.",
+        "Provides long-term security against powerful potential adversaries."
     ],
     "cons": [
-        "PQC algorithms often have larger key sizes and slower signature verification."
+        "Significant increase in bandwidth and storage requirements for PQC public keys.",
+        "Integration complexity within existing protocols (TLS, SSH, IPsec).",
+        "Current performance overhead during the key exchange phase."
     ],
-    "confidence": 0.95,
+    "confidence": 0.01,
     "sources": [
         {
-            "doc_id": "doc_1",
-            "snippet": "Shor's algorithm achieves exponential speedup over classical factoring...",
-            "uri": "https://example.com/shors-algorithm",
-            "score": 0.98
+            "doc_id": "doc_shor_1994",
+            "snippet": "We present polynomial time algorithms for prime factorization and discrete logarithms on a quantum computer.",
+            "uri": "https://arxiv.org/abs/quant-ph/9508027",
+            "score": 0.99
+        },
+        {
+            "doc_id": "doc_nist_pqc",
+            "snippet": "NIST has officially standardized Kyber for public key encryption and key encapsulation.",
+            "uri": "https://csrc.nist.gov/projects/post-quantum-cryptography",
+            "score": 0.95
         }
     ],
     "claims": [
         {
-            "id": "claim_1",
-            "text": "RSA-2048 will be broken by a sufficiently large quantum computer.",
-            "evidence": "Shor's algorithm enables polynomial factorization.",
-            "source_id": "doc_1",
-            "confidence": 0.99
+            "id": "claim_rsa_vulnerable",
+            "text": "Current RSA implementations will fail to protect against a cryptographically relevant quantum computer.",
+            "polarity": "supports",
+            "subject": "RSA cryptosystem",
+            "predicate": "will fail to protect",
+            "object": "encrypted data against quantum computers",
+            "evidence": "Shor's algorithm provides polynomial time factorization which undercuts RSA prime product dependency.",
+            "source_id": "doc_shor_1994",
+            "confidence": 1.0
+        },
+        {
+            "id": "claim_kyber_standardized",
+            "text": "Kyber is a lattice-based algorithm chosen for post-quantum security.",
+            "polarity": "neutral",
+            "subject": "Kyber",
+            "predicate": "is chosen for",
+            "object": "post-quantum standardization",
+            "source_id": "doc_nist_pqc",
+            "confidence": 0.98
         }
     ],
     "metadata": {
-        "latency": 4500.5,
-        "model": "gpt-4-turbo",
-        "tokens_used": 1542
+        "latency_ms": 7850.4,
+        "model": "gpt-4o",
+        "tokens_used": 2843,
+        "version": "1.1.0"
     }
 }
