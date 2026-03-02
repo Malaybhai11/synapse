@@ -1,0 +1,61 @@
+{
+    "id": "report_12345",
+    "query": "Impact of quantum computing on modern cryptography",
+    "timestamp": "2026-03-02T23:07:47Z",
+    "executive_summary": "Quantum computing poses a significant future risk to current asymmetric cryptographic standards like RSA and ECC, primarily due to Shor's algorithm.",
+    "technical_breakdown": [
+        {
+            "topic": "Shor's Algorithm",
+            "text": "Shor's algorithm can factor large integers and compute discrete logarithms in polynomial time, unlike classical algorithms which take exponential time. This breaks RSA and ECC.",
+            "evidence": "Doc1 section 4 details exponential speedup using QFT."
+        }
+    ],
+    "comparison_table": {
+        "columns": [
+            "Cryptosystem",
+            "Classical Security",
+            "Post-Quantum Security"
+        ],
+        "rows": [
+            {
+                "Cryptosystem": "RSA-2048",
+                "Classical Security": "High",
+                "Post-Quantum Security": "Vulnerable"
+            },
+            {
+                "Cryptosystem": "Lattice-based (Kyber)",
+                "Classical Security": "High",
+                "Post-Quantum Security": "Resistant"
+            }
+        ]
+    },
+    "pros": [
+        "Transition to PQC (Post-Quantum Cryptography) encourages cryptographic agility."
+    ],
+    "cons": [
+        "PQC algorithms often have larger key sizes and slower signature verification."
+    ],
+    "confidence": 0.95,
+    "sources": [
+        {
+            "doc_id": "doc_1",
+            "snippet": "Shor's algorithm achieves exponential speedup over classical factoring...",
+            "uri": "https://example.com/shors-algorithm",
+            "score": 0.98
+        }
+    ],
+    "claims": [
+        {
+            "id": "claim_1",
+            "text": "RSA-2048 will be broken by a sufficiently large quantum computer.",
+            "evidence": "Shor's algorithm enables polynomial factorization.",
+            "source_id": "doc_1",
+            "confidence": 0.99
+        }
+    ],
+    "metadata": {
+        "latency": 4500.5,
+        "model": "gpt-4-turbo",
+        "tokens_used": 1542
+    }
+}

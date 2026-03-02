@@ -1,0 +1,174 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://synapse.local/schemas/research_report.schema.json",
+    "title": "ResearchReport",
+    "description": "Primary research output representing a structured Synapse research report.",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "description": "Unique identifier for the research report."
+        },
+        "query": {
+            "type": "string",
+            "description": "The original user query or research topic."
+        },
+        "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of when the report was generated."
+        },
+        "executive_summary": {
+            "type": "string",
+            "description": "A high-level summary of the research findings."
+        },
+        "technical_breakdown": {
+            "type": "array",
+            "description": "Detailed technical analysis broken down by topic.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "topic": {
+                        "type": "string",
+                        "description": "The name or title of the technical topic."
+                    },
+                    "text": {
+                        "type": "string",
+                        "description": "Detailed explanation or analysis of the topic."
+                    },
+                    "evidence": {
+                        "type": "string",
+                        "description": "Supporting evidence or data for the technical breakdown."
+                    }
+                },
+                "required": [
+                    "topic",
+                    "text",
+                    "evidence"
+                ]
+            }
+        },
+        "comparison_table": {
+            "type": "object",
+            "description": "A structured table for comparing different entities, concepts, or solutions.",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The column headers for the comparison table."
+                },
+                "rows": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "description": "The rows of the comparison table. Each key should correspond to a column name."
+                }
+            },
+            "required": [
+                "columns",
+                "rows"
+            ]
+        },
+        "pros": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "List of pros, advantages, or positive aspects."
+        },
+        "cons": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "List of cons, disadvantages, or negative aspects."
+        },
+        "confidence": {
+            "type": "number",
+            "description": "Overall confidence score for the report (0-1).",
+            "minimum": 0,
+            "maximum": 1
+        },
+        "sources": {
+            "type": "array",
+            "description": "List of source documents referenced in the report.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "doc_id": {
+                        "type": "string",
+                        "description": "Identifier of the source document."
+                    },
+                    "snippet": {
+                        "type": "string",
+                        "description": "Relevant text snippet from the source document."
+                    },
+                    "uri": {
+                        "type": "string",
+                        "description": "URI or URL of the source document.",
+                        "format": "uri"
+                    },
+                    "score": {
+                        "type": "number",
+                        "description": "Relevance score of the source document."
+                    }
+                },
+                "required": [
+                    "doc_id",
+                    "snippet",
+                    "uri"
+                ]
+            }
+        },
+        "claims": {
+            "type": "array",
+            "description": "List of claim objects extracted during research.",
+            "items": {
+                "$ref": "claim.schema.json"
+            }
+        },
+        "metadata": {
+            "type": "object",
+            "description": "Execution metadata such as timing and token usage.",
+            "properties": {
+                "latency": {
+                    "type": "number",
+                    "description": "Total generation time in milliseconds."
+                },
+                "model": {
+                    "type": "string",
+                    "description": "Identifier of the LLM model used."
+                },
+                "tokens_used": {
+                    "type": "integer",
+                    "description": "Total token consumption."
+                }
+            },
+            "required": [
+                "latency",
+                "model",
+                "tokens_used"
+            ]
+        }
+    },
+    "required": [
+        "id",
+        "query",
+        "timestamp",
+        "executive_summary",
+        "technical_breakdown",
+        "comparison_table",
+        "pros",
+        "cons",
+        "confidence",
+        "sources",
+        "claims",
+        "metadata"
+    ]
+}

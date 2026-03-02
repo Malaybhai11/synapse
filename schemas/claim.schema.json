@@ -1,0 +1,37 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://synapse.local/schemas/claim.schema.json",
+    "title": "Claim",
+    "description": "A representation of a verifiable claim identified during research.",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "description": "Unique identifier for the claim."
+        },
+        "text": {
+            "type": "string",
+            "description": "The textual content of the claim."
+        },
+        "evidence": {
+            "type": "string",
+            "description": "A brief snippet or summary of evidence backing this claim."
+        },
+        "source_id": {
+            "type": "string",
+            "description": "ID of the source document supporting this claim."
+        },
+        "confidence": {
+            "type": "number",
+            "description": "Confidence score for the claim (0-1).",
+            "minimum": 0,
+            "maximum": 1
+        }
+    },
+    "required": [
+        "id",
+        "text",
+        "source_id",
+        "confidence"
+    ]
+}
