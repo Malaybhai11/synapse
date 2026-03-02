@@ -83,7 +83,7 @@ volumes:
 #   docker compose exec speaches uv tool run speaches-cli model download Systran/faster-whisper-small
 #
 # ==========================================
-# CONFIGURATION IN OPEN NOTEBOOK
+# CONFIGURATION IN Synapse
 # ==========================================
 #
 # 1. Go to Settings → API Keys

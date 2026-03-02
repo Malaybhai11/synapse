@@ -1,6 +1,6 @@
 # AI Providers - Comparison & Selection Guide
 
-Open Notebook supports 15+ AI providers. This guide helps you **choose the right provider** for your needs.
+Synapse supports 15+ AI providers. This guide helps you **choose the right provider** for your needs.
 
 > 💡 **Just want to set up a provider?** Skip to the [Configuration Guide](../5-CONFIGURATION/ai-providers.md) for detailed setup instructions.
 
@@ -188,7 +188,7 @@ Any use: Free (electricity only)
 2. **Follow the setup guide**: [AI Providers Configuration](../5-CONFIGURATION/ai-providers.md)
 3. **Add your credential** in Settings → API Keys
 4. **Test your connection** and discover models
-5. **Start using Open Notebook!**
+5. **Start using Synapse!**
 
 ---
 

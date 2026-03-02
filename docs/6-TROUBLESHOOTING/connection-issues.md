@@ -267,13 +267,13 @@ ping -c 100 google.com | grep "packet loss"
 
 ## Different Machine / Remote Access
 
-**You want to access Open Notebook from another computer**
+**You want to access Synapse from another computer**
 
 **Solution:**
 
 ### Step 1: Get Your Machine IP
 ```bash
-# On the server running Open Notebook:
+# On the server running Synapse:
 ifconfig | grep "inet "
 # or
 hostname -I

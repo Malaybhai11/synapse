@@ -3,7 +3,7 @@
 # This is the complete privacy-focused setup with NO external APIs needed:
 # - Ollama: Local LLM and embeddings (mistral, llama, nomic-embed, etc.)
 # - Speaches: Local TTS (text-to-speech) and STT (speech-to-text)
-# - Open Notebook: Your research assistant
+# - Synapse: Your research assistant
 # - SurrealDB: Local database
 #
 # Perfect for:
@@ -118,7 +118,7 @@ volumes:
 #   docker compose exec speaches uv tool run speaches-cli model download Systran/faster-whisper-small
 #
 # ==========================================
-# CONFIGURATION IN OPEN NOTEBOOK
+# CONFIGURATION IN Synapse
 # ==========================================
 #
 # 1. Configure Ollama:

@@ -1,6 +1,6 @@
 # Quick Start - Development
 
-Get Open Notebook running locally in 5 minutes.
+Get Synapse running locally in 5 minutes.
 
 ## Prerequisites
 
@@ -51,7 +51,7 @@ cd frontend && npm run dev
 
 - **API Health**: http://localhost:5055/health → should return `{"status": "ok"}`
 - **API Docs**: http://localhost:5055/docs → interactive API documentation
-- **Frontend**: http://localhost:3000 → Open Notebook UI
+- **Frontend**: http://localhost:3000 → Synapse UI
 
 **All three show up?** ✅ You're ready to develop!
 

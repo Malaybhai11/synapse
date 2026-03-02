@@ -1,6 +1,6 @@
 # Ollama Setup Guide
 
-Ollama provides free, local AI models that run on your own hardware. This guide covers everything you need to know about setting up Ollama with Open Notebook, including different deployment scenarios and network configurations.
+Ollama provides free, local AI models that run on your own hardware. This guide covers everything you need to know about setting up Ollama with Synapse, including different deployment scenarios and network configurations.
 
 ## Why Choose Ollama?
 
@@ -36,7 +36,7 @@ ollama pull phi4              # Microsoft's efficient model
 ollama pull mxbai-embed-large  # Best embedding model for Ollama
 ```
 
-### 3. Configure Open Notebook
+### 3. Configure Synapse
 
 **Via Settings UI (Recommended):**
 1. Go to **Settings** → **API Keys**
@@ -61,15 +61,15 @@ When adding an Ollama credential in **Settings → API Keys**, you need to enter
 
 ### Scenario 1: Local Installation (Same Machine)
 
-When both Open Notebook and Ollama run directly on your machine:
+When both Synapse and Ollama run directly on your machine:
 
 **Base URL to enter in Settings → API Keys:** `http://localhost:11434`
 
 Alternative: `http://127.0.0.1:11434` (use if you have DNS resolution issues with localhost)
 
-### Scenario 2: Open Notebook in Docker, Ollama on Host
+### Scenario 2: Synapse in Docker, Ollama on Host
 
-When Open Notebook runs in Docker but Ollama runs on your host machine:
+When Synapse runs in Docker but Ollama runs on your host machine:
 
 **Base URL to enter in Settings → API Keys:** `http://host.docker.internal:11434`
 
@@ -110,7 +110,7 @@ httpcore.ConnectError: [Errno -2] Name or service not known
 
 ### Scenario 3: Both in Docker (Same Compose)
 
-When both Open Notebook and Ollama run in the same Docker Compose stack:
+When both Synapse and Ollama run in the same Docker Compose stack:
 
 **Base URL to enter in Settings → API Keys:** `http://ollama:11434`
 
@@ -248,7 +248,7 @@ ollama pull qwen3
 
 **⚠️ IMPORTANT: Model names must exactly match the output of `ollama list`**
 
-This is the most common cause of "Failed to send message" errors. Open Notebook requires the **exact model name** as it appears in Ollama.
+This is the most common cause of "Failed to send message" errors. Synapse requires the **exact model name** as it appears in Ollama.
 
 **Step 1: Get the exact model name**
 ```bash
@@ -263,7 +263,7 @@ gemma3:12b                  f4031aab637d    8.1 GB    2 months ago
 qwen3:32b                   030ee887880f    20 GB     9 days ago
 ```
 
-**Step 2: Use the exact name when adding the model in Open Notebook**
+**Step 2: Use the exact name when adding the model in Synapse**
 
 | ✅ Correct | ❌ Wrong |
 |-----------|----------|
@@ -271,9 +271,9 @@ qwen3:32b                   030ee887880f    20 GB     9 days ago
 | `qwen3:32b` | `qwen3-32b` (wrong format) |
 | `mxbai-embed-large:latest` | `mxbai-embed-large` (missing tag) |
 
-**Note:** Some models use `:latest` as the default tag. If `ollama list` shows `model:latest`, you must use `model:latest` in Open Notebook, not just `model`.
+**Note:** Some models use `:latest` as the default tag. If `ollama list` shows `model:latest`, you must use `model:latest` in Synapse, not just `model`.
 
-**Step 3: Configure in Open Notebook**
+**Step 3: Configure in Synapse**
 
 1. Go to **Settings → Models**
 2. Click **Add Model**
@@ -285,7 +285,7 @@ qwen3:32b                   030ee887880f    20 GB     9 days ago
 
 ### Common Issues
 
-**1. "Ollama unavailable" in Open Notebook**
+**1. "Ollama unavailable" in Synapse**
 
 **Check Ollama is running:**
 ```bash
@@ -297,12 +297,12 @@ Check **Settings → API Keys** for an Ollama credential with the correct base U
 
 **⚠️ IMPORTANT: Enable external connections (most common fix):**
 ```bash
-# If Open Notebook runs in Docker or on a different machine,
+# If Synapse runs in Docker or on a different machine,
 # Ollama must bind to all interfaces, not just localhost
 export OLLAMA_HOST=0.0.0.0:11434
 ollama serve
 ```
-> **Why this is needed:** By default, Ollama only accepts connections from `localhost` (127.0.0.1). When Open Notebook runs in Docker or on a different machine, it can't reach Ollama unless you configure `OLLAMA_HOST=0.0.0.0:11434` to accept external connections.
+> **Why this is needed:** By default, Ollama only accepts connections from `localhost` (127.0.0.1). When Synapse runs in Docker or on a different machine, it can't reach Ollama unless you configure `OLLAMA_HOST=0.0.0.0:11434` to accept external connections.
 
 **Restart Ollama:**
 ```bash
@@ -317,7 +317,7 @@ ollama serve
 
 **2. Docker networking issues**
 
-**From inside Open Notebook container, test Ollama:**
+**From inside Synapse container, test Ollama:**
 ```bash
 # Get into container
 docker exec -it open-notebook bash
@@ -383,10 +383,10 @@ Error executing chat: Model is not a LanguageModel: None
 
 **Causes (in order of likelihood):**
 
-1. **Model name mismatch**: The model name in Open Notebook doesn't exactly match `ollama list`
+1. **Model name mismatch**: The model name in Synapse doesn't exactly match `ollama list`
 2. **No default model configured**: You haven't set a default chat model in Settings → Models
-3. **Model was deleted**: You removed the model from Ollama but didn't update Open Notebook's defaults
-4. **Model record deleted**: The model was removed from Open Notebook but is still set as default
+3. **Model was deleted**: You removed the model from Ollama but didn't update Synapse's defaults
+4. **Model record deleted**: The model was removed from Synapse but is still set as default
 
 **Solutions:**
 
@@ -395,7 +395,7 @@ Error executing chat: Model is not a LanguageModel: None
 # Get exact model names from Ollama
 ollama list
 
-# Compare with what's configured in Open Notebook
+# Compare with what's configured in Synapse
 # Go to Settings → Models and verify the names match EXACTLY
 ```
 
@@ -407,7 +407,7 @@ ollama list
 
 **Check 3: Refresh after changes**
 If you've added/removed models in Ollama:
-1. Refresh the Open Notebook page
+1. Refresh the Synapse page
 2. Go to Settings → Models
 3. Re-add any missing models with exact names from `ollama list`
 4. Re-select default models if needed
@@ -540,7 +540,7 @@ export OLLAMA_MAX_QUEUE=512            # Request queue size
 export OLLAMA_NUM_PARALLEL=4           # Parallel request handling
 export OLLAMA_FLASH_ATTENTION=1        # Enable flash attention (if supported)
 
-# Open Notebook configuration (configure via Settings → API Keys instead)
+# Synapse configuration (configure via Settings → API Keys instead)
 # OLLAMA_API_BASE=http://localhost:11434  # Deprecated — use Settings UI
 ```
 
@@ -600,7 +600,7 @@ EOF
 ollama create my-research-model -f Modelfile
 ```
 
-**Use in Open Notebook:**
+**Use in Synapse:**
 1. Go to Models
 2. Add new model: `my-research-model`
 3. Set as default for specific tasks
@@ -730,7 +730,7 @@ fi
 **Community Resources:**
 - [Ollama GitHub](https://github.com/jmorganca/ollama) - Official repository
 - [Ollama Discord](https://discord.gg/ollama) - Community support
-- [Open Notebook Discord](https://discord.gg/37XJPXfz2w) - Integration help
+- [Synapse Discord](https://discord.gg/37XJPXfz2w) - Integration help
 
 **Debugging Resources:**
 - Check Ollama logs for error messages
@@ -738,4 +738,4 @@ fi
 - Verify environment variables
 - Monitor system resources
 
-This comprehensive guide should help you successfully deploy and optimize Ollama with Open Notebook. Start with the Quick Start section and refer to specific scenarios as needed.
+This comprehensive guide should help you successfully deploy and optimize Ollama with Synapse. Start with the Quick Start section and refer to specific scenarios as needed.

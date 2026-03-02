@@ -16,10 +16,10 @@ vi.mock('@/components/ui/tooltip', () => ({
 describe('AppSidebar', () => {
   it('renders correctly when expanded', () => {
     render(<AppSidebar />)
-    
+
     // Check for logo or app name (using actual locale value)
-    expect(screen.getByText(/Open Notebook/i)).toBeDefined()
-    
+    expect(screen.getByText(/Synapse/i)).toBeDefined()
+
     // Check for navigation items (using actual locale values)
     expect(screen.getByText(/Sources/i)).toBeDefined()
     expect(screen.getByText(/Notebooks/i)).toBeDefined()
@@ -33,16 +33,16 @@ describe('AppSidebar', () => {
     } as any)
 
     render(<AppSidebar />)
-    
+
     // The collapse button has ChevronLeft icon when expanded
     // The collapse button has ChevronLeft icon when expanded
     // const toggleButton = screen.getAllByRole('button')[0]
     // Let's use more specific selector if possible, but AppSidebar has many buttons
     // Actually, line 147 has the button
-    
+
     // Use data-testid for reliable selection
     fireEvent.click(screen.getByTestId('sidebar-toggle'))
-    
+
     expect(toggleCollapse).toHaveBeenCalled()
   })
 
@@ -53,8 +53,8 @@ describe('AppSidebar', () => {
     } as any)
 
     render(<AppSidebar />)
-    
+
     // In collapsed mode, app name shouldn't be visible (as text)
-    expect(screen.queryByText(/Open Notebook/i)).toBeNull()
+    expect(screen.queryByText(/Synapse/i)).toBeNull()
   })
 })

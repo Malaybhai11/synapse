@@ -1,6 +1,6 @@
 # Local Development Setup
 
-This guide walks you through setting up Open Notebook for local development. Follow these steps to get the full stack running on your machine.
+This guide walks you through setting up Synapse for local development. Follow these steps to get the full stack running on your machine.
 
 ## Prerequisites
 

@@ -1,5 +1,5 @@
 """
-Generic ContextBuilder for the Open Notebook project.
+Generic ContextBuilder for the Synapse project.
 
 This module provides a flexible ContextBuilder class that can handle any parameters
 and build context from sources, notebooks, insights, and notes.

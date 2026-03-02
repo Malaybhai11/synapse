@@ -1,6 +1,6 @@
 # Quick Start - Local & Private (5 minutes)
 
-Get Open Notebook running with **100% local AI** using Ollama. No cloud API keys needed, completely private.
+Get Synapse running with **100% local AI** using Ollama. No cloud API keys needed, completely private.
 
 ## Prerequisites
 
@@ -109,14 +109,14 @@ This downloads the model (will take 1-5 minutes depending on your internet).
 
 ---
 
-## Step 5: Access Open Notebook (instant)
+## Step 5: Access Synapse (instant)
 
 Open your browser:
 ```
 http://localhost:8502
 ```
 
-You should see the Open Notebook interface.
+You should see the Synapse interface.
 
 ---
 
@@ -263,7 +263,7 @@ docker exec open-notebook-local-ollama-1 ollama pull neural-chat
 1. Download LM Studio: https://lmstudio.ai
 2. Open the app, download a model from the library
 3. Go to "Local Server" tab, start server (port 1234)
-4. In Open Notebook, go to **Settings** → **API Keys**
+4. In Synapse, go to **Settings** → **API Keys**
 5. Click **Add Credential** → Select **OpenAI-Compatible**
 6. Enter base URL: `http://host.docker.internal:1234/v1`
 7. Enter API key: `lm-studio` (placeholder)

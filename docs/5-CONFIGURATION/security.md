@@ -1,12 +1,12 @@
 # Security Configuration
 
-Protect your Open Notebook deployment with password authentication and production hardening.
+Protect your Synapse deployment with password authentication and production hardening.
 
 ---
 
 ## API Key Encryption
 
-Open Notebook encrypts API keys stored in the database using Fernet symmetric encryption (AES-128-CBC with HMAC-SHA256).
+Synapse encrypts API keys stored in the database using Fernet symmetric encryption (AES-128-CBC with HMAC-SHA256).
 
 ### Configuration Methods
 
@@ -290,7 +290,7 @@ See [Reverse Proxy Configuration](reverse-proxy.md) for complete nginx/Caddy/Tra
 
 ## Security Limitations
 
-Open Notebook's password protection provides **basic access control**, not enterprise-grade security:
+Synapse's password protection provides **basic access control**, not enterprise-grade security:
 
 | Feature | Status |
 |---------|--------|

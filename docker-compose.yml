@@ -13,7 +13,7 @@ services:
     pull_policy: always
 
   open_notebook:
-    image: lfnovo/open_notebook:v1-latest
+    build: .
     ports:
       - "8502:8502"  # Web UI
       - "5055:5055"  # REST API

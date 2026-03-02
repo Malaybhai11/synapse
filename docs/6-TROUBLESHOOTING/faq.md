@@ -1,14 +1,14 @@
 # Frequently Asked Questions
 
-Common questions about Open Notebook usage, configuration, and best practices.
+Common questions about Synapse usage, configuration, and best practices.
 
 ---
 
 ## General Usage
 
-### What is Open Notebook?
+### What is Synapse?
 
-Open Notebook is an open-source, privacy-focused alternative to Google's Notebook LM. It allows you to:
+Synapse is an open-source, privacy-focused alternative to Google's Notebook LM. It allows you to:
 - Create and manage research notebooks
 - Chat with your documents using AI
 - Generate podcasts from your content
@@ -22,7 +22,7 @@ Open Notebook is an open-source, privacy-focused alternative to Google's Noteboo
 **Customization**: Open source, so you can modify and extend functionality
 **Control**: You control your data, models, and processing
 
-### Can I use Open Notebook offline?
+### Can I use Synapse offline?
 
 **Partially**: The application runs locally, but requires internet for:
 - AI model API calls (unless using local models like Ollama)
@@ -165,14 +165,14 @@ tar -xzf backup-20240101.tar.gz
 
 ## Technical Questions
 
-### Can I use Open Notebook programmatically?
+### Can I use Synapse programmatically?
 
-**Yes**: Open Notebook provides a REST API:
+**Yes**: Synapse provides a REST API:
 - Full API documentation at `http://localhost:5055/docs`
 - Support for all UI functionality
 - Authentication via password header
 
-### Can I run Open Notebook in production?
+### Can I run Synapse in production?
 
 **Yes**: Designed for production use with:
 - Docker deployment

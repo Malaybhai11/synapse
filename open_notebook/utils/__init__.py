@@ -1,5 +1,5 @@
 """
-Utils package for Open Notebook.
+Utils package for Synapse.
 
 To avoid circular imports, import functions directly:
 - from open_notebook.utils.context_builder import ContextBuilder
