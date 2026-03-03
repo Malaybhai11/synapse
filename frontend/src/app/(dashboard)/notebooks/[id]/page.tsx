@@ -11,8 +11,6 @@ import { useNotebook } from '@/lib/hooks/use-notebooks'
 import { useNotebookSources } from '@/lib/hooks/use-sources'
 import { useNotes } from '@/lib/hooks/use-notes'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
-import { useNotebookColumnsStore } from '@/lib/stores/notebook-columns-store'
-import { useIsDesktop } from '@/lib/hooks/use-media-query'
 import { useTranslation } from '@/lib/hooks/use-translation'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -43,14 +41,8 @@ export default function NotebookPage() {
   } = useNotebookSources(notebookId)
   const { data: notes, isLoading: notesLoading } = useNotes(notebookId)
 
-  // Get collapse states for dynamic layout
-  const { sourcesCollapsed, notesCollapsed } = useNotebookColumnsStore()
-
-  // Detect desktop to avoid double-mounting ChatColumn
-  const isDesktop = useIsDesktop()
-
-  // Mobile tab state (Sources, Notes, or Chat)
-  const [mobileActiveTab, setMobileActiveTab] = useState<'sources' | 'notes' | 'chat'>('chat')
+  // Unified tab state (Sources, Notes, or Chat)
+  const [activeTab, setActiveTab] = useState<'sources' | 'notes' | 'chat'>('chat')
 
   // Context selection state
   const [contextSelections, setContextSelections] = useState<ContextSelections>({
@@ -128,118 +120,93 @@ export default function NotebookPage() {
 
   return (
     <AppShell>
-      <div className="flex flex-col flex-1 min-h-0">
-        <div className="flex-shrink-0 p-6 pb-0">
+      <div className="flex flex-col flex-1 min-h-0 bg-background">
+        <div className="flex-shrink-0 p-6 pb-2">
           <NotebookHeader notebook={notebook} />
         </div>
 
-        <div className="flex-1 p-6 pt-6 overflow-x-auto flex flex-col">
-          {/* Mobile: Tabbed interface - only render on mobile to avoid double-mounting */}
-          {!isDesktop && (
-            <>
-              <div className="lg:hidden mb-4">
-                <Tabs value={mobileActiveTab} onValueChange={(value) => setMobileActiveTab(value as 'sources' | 'notes' | 'chat')}>
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="sources" className="gap-2">
-                      <FileText className="h-4 w-4" />
-                      {t.navigation.sources}
-                    </TabsTrigger>
-                    <TabsTrigger value="notes" className="gap-2">
-                      <StickyNote className="h-4 w-4" />
-                      {t.common.notes}
-                    </TabsTrigger>
-                    <TabsTrigger value="chat" className="gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      {t.common.chat}
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
+        <div className="flex-1 px-6 pb-6 pt-2 overflow-hidden flex flex-col">
+          {/* Unified Tabbed Interface */}
+          <div className="flex-shrink-0 mb-6">
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => setActiveTab(value as 'sources' | 'notes' | 'chat')}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto p-1 bg-muted/30 backdrop-blur-sm border border-border/50 rounded-xl">
+                <TabsTrigger
+                  value="sources"
+                  className={cn(
+                    "gap-2 py-2.5 transition-all duration-300 rounded-lg",
+                    activeTab === 'sources' && "bg-background text-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.2)] dark:shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] ring-1 ring-primary/20"
+                  )}
+                >
+                  <FileText className="h-4 w-4" />
+                  <span className="font-medium">{t.navigation.sources}</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="notes"
+                  className={cn(
+                    "gap-2 py-2.5 transition-all duration-300 rounded-lg",
+                    activeTab === 'notes' && "bg-background text-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.2)] dark:shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] ring-1 ring-primary/20"
+                  )}
+                >
+                  <StickyNote className="h-4 w-4" />
+                  <span className="font-medium">{t.common.notes}</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="chat"
+                  className={cn(
+                    "gap-2 py-2.5 transition-all duration-300 rounded-lg",
+                    activeTab === 'chat' && "bg-background text-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.2)] dark:shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] ring-1 ring-primary/20"
+                  )}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="font-medium">{t.common.chat}</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          {/* Active Tab Content */}
+          <div className="flex-1 overflow-hidden">
+            {activeTab === 'sources' && (
+              <div className="h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <SourcesColumn
+                  sources={sources}
+                  isLoading={sourcesLoading}
+                  notebookId={notebookId}
+                  notebookName={notebook?.name}
+                  onRefresh={refetchSources}
+                  contextSelections={contextSelections.sources}
+                  onContextModeChange={(sourceId, mode) => handleContextModeChange(sourceId, mode, 'source')}
+                  hasNextPage={hasNextPage}
+                  isFetchingNextPage={isFetchingNextPage}
+                  fetchNextPage={fetchNextPage}
+                />
               </div>
-
-              {/* Mobile: Show only active tab */}
-              <div className="flex-1 overflow-hidden lg:hidden">
-                {mobileActiveTab === 'sources' && (
-                  <SourcesColumn
-                    sources={sources}
-                    isLoading={sourcesLoading}
-                    notebookId={notebookId}
-                    notebookName={notebook?.name}
-                    onRefresh={refetchSources}
-                    contextSelections={contextSelections.sources}
-                    onContextModeChange={(sourceId, mode) => handleContextModeChange(sourceId, mode, 'source')}
-                    hasNextPage={hasNextPage}
-                    isFetchingNextPage={isFetchingNextPage}
-                    fetchNextPage={fetchNextPage}
-                  />
-                )}
-                {mobileActiveTab === 'notes' && (
-                  <NotesColumn
-                    notes={notes}
-                    isLoading={notesLoading}
-                    notebookId={notebookId}
-                    contextSelections={contextSelections.notes}
-                    onContextModeChange={(noteId, mode) => handleContextModeChange(noteId, mode, 'note')}
-                  />
-                )}
-                {mobileActiveTab === 'chat' && (
-                  <ChatColumn
-                    notebookId={notebookId}
-                    contextSelections={contextSelections}
-                    sources={sources}
-                    sourcesLoading={sourcesLoading}
-                  />
-                )}
+            )}
+            {activeTab === 'notes' && (
+              <div className="h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <NotesColumn
+                  notes={notes}
+                  isLoading={notesLoading}
+                  notebookId={notebookId}
+                  contextSelections={contextSelections.notes}
+                  onContextModeChange={(noteId, mode) => handleContextModeChange(noteId, mode, 'note')}
+                />
               </div>
-            </>
-          )}
-
-          {/* Desktop: Collapsible columns layout */}
-          <div className={cn(
-            'hidden lg:flex h-full min-h-0 gap-6 transition-all duration-150',
-            'flex-row'
-          )}>
-            {/* Sources Column */}
-            <div className={cn(
-              'transition-all duration-150',
-              sourcesCollapsed ? 'w-12 flex-shrink-0' : 'flex-none basis-1/3'
-            )}>
-              <SourcesColumn
-                sources={sources}
-                isLoading={sourcesLoading}
-                notebookId={notebookId}
-                notebookName={notebook?.name}
-                onRefresh={refetchSources}
-                contextSelections={contextSelections.sources}
-                onContextModeChange={(sourceId, mode) => handleContextModeChange(sourceId, mode, 'source')}
-                hasNextPage={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
-                fetchNextPage={fetchNextPage}
-              />
-            </div>
-
-            {/* Notes Column */}
-            <div className={cn(
-              'transition-all duration-150',
-              notesCollapsed ? 'w-12 flex-shrink-0' : 'flex-none basis-1/3'
-            )}>
-              <NotesColumn
-                notes={notes}
-                isLoading={notesLoading}
-                notebookId={notebookId}
-                contextSelections={contextSelections.notes}
-                onContextModeChange={(noteId, mode) => handleContextModeChange(noteId, mode, 'note')}
-              />
-            </div>
-
-            {/* Chat Column - always expanded, takes remaining space */}
-            <div className="transition-all duration-150 flex-1 min-w-0 lg:pr-6 lg:-mr-6">
-              <ChatColumn
-                notebookId={notebookId}
-                contextSelections={contextSelections}
-                sources={sources}
-                sourcesLoading={sourcesLoading}
-              />
-            </div>
+            )}
+            {activeTab === 'chat' && (
+              <div className="h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <ChatColumn
+                  notebookId={notebookId}
+                  contextSelections={contextSelections}
+                  sources={sources}
+                  sourcesLoading={sourcesLoading}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
