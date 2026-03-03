@@ -51,6 +51,7 @@ class AskRequest(BaseModel):
     strategy_model: str = Field(..., description="Model ID for query strategy")
     answer_model: str = Field(..., description="Model ID for individual answers")
     final_answer_model: str = Field(..., description="Model ID for final answer")
+    mode: Optional[str] = Field("default", description="Execution mode, e.g. 'research' applies strict JSON output schemas")
 
 
 class AskResponse(BaseModel):

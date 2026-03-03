@@ -9,6 +9,7 @@ from .embedding_commands import (
 from .example_commands import analyze_data_command, process_text_command
 from .podcast_commands import generate_podcast_command
 from .source_commands import process_source_command
+from .claim_commands import extract_claims_command
 
 __all__ = [
     # Embedding commands
@@ -21,4 +22,5 @@ __all__ = [
     "process_source_command",
     "process_text_command",
     "analyze_data_command",
+    "extract_claims_command",
 ]

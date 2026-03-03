@@ -15,6 +15,13 @@ from open_notebook.exceptions import OpenNotebookError
 from open_notebook.utils import clean_thinking_content
 from open_notebook.utils.error_classifier import classify_error
 from open_notebook.utils.text_utils import extract_text_content
+from open_notebook.ai.validator import OutputSchemaValidator
+from open_notebook.ai.confidence_estimator import estimate_report_confidence, DEFAULT_CONFIDENCE_VERSION
+from open_notebook.domain.notebook import GeneratedReport
+from surreal_commands import submit_command
+from loguru import logger
+import json
+import os
 
 
 class SubGraphState(TypedDict):
@@ -135,7 +142,59 @@ async def write_final_answer(state: ThreadState, config: RunnableConfig) -> dict
         )
         ai_message = await model.ainvoke(system_prompt)
         final_content = extract_text_content(ai_message.content)
-        return {"final_answer": clean_thinking_content(final_content)}
+        cleaned_content = clean_thinking_content(final_content)
+        
+        # Apply strict schema validation if requested in research mode
+        run_mode = config.get("configurable", {}).get("mode", "default")
+        if run_mode == "research":
+            # Determine schema path dynamically to remain robust
+            schema_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                "schemas", "research_report.schema.json"
+            )
+            validator = OutputSchemaValidator(schema_path)
+            valid_json_dict = await validator.validate_and_fix(cleaned_content, max_retries=2, timeout_sec=8.0)
+            
+            # Phase 5 Confidence Estimator Overwrite
+            naive_conf = valid_json_dict.get("confidence", 0.75)
+            structured_conf = estimate_report_confidence(valid_json_dict)
+            
+            # Subtly backup naive AI guess into structured meta
+            if "metadata" not in valid_json_dict:
+                valid_json_dict["metadata"] = {}
+            valid_json_dict["metadata"]["model_confidence"] = naive_conf
+            
+            # Force replace outbound struct
+            valid_json_dict["confidence"] = structured_conf
+            
+            # Phase 4 Claim Extraction Graph Hook
+            # 1. Structure Database Persistence
+            metadata = valid_json_dict.get("metadata", {})
+            report = GeneratedReport(
+                query=state.get("question", ""),
+                structured_content=valid_json_dict,
+                confidence=structured_conf,
+                model_used=metadata.get("model", ""),
+                tokens_used=metadata.get("tokens_used", 0),
+                latency_ms=metadata.get("latency", 0),
+                schema_version=valid_json_dict.get("version", "1.0"),
+                confidence_version=DEFAULT_CONFIDENCE_VERSION,
+                generation_status="completed"
+            )
+            await report.save()
+            
+            # 2. Check Feature Toggle and trigger background claims worker
+            if os.getenv("SYNAPSE_ENABLE_CLAIM_INGESTION", "true").lower() == "true":
+                submit_command("open_notebook", "extract_claims", {"report_id": str(report.id)})
+                logger.info(f"Enqueued extract_claims job for report {report.id}")
+            else:
+                logger.info("claim_ingestion_skipped_reason: SYNAPSE_ENABLE_CLAIM_INGESTION feature toggle is disabled")
+
+            # Serialize back to string for the pipeline state (or return dict depending on state definition)
+            # `ThreadState.final_answer` expects a string
+            cleaned_content = json.dumps(valid_json_dict, indent=2)
+
+        return {"final_answer": cleaned_content}
     except OpenNotebookError:
         raise
     except Exception as e:

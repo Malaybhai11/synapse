@@ -678,3 +678,46 @@ async def vector_search(
         logger.error(f"Error performing vector search: {str(e)}")
         logger.exception(e)
         raise DatabaseOperationError(e)
+
+
+# =============================================================================
+# PHASE 4: CLAIM EXTRACTION MODELS
+# =============================================================================
+
+class GeneratedReport(ObjectModel):
+    table_name: ClassVar[str] = "generated_report"
+    query: Optional[str] = None
+    structured_content: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    confidence: Optional[float] = None
+    model_used: Optional[str] = None
+    tokens_used: Optional[int] = None
+    latency_ms: Optional[int] = None
+    schema_version: Optional[str] = None
+    generation_status: Optional[str] = None
+    claim_extraction_status: Optional[Literal["pending", "running", "complete", "failed"]] = "pending"
+    confidence_version: Optional[str] = None
+
+
+class Claim(ObjectModel):
+    table_name: ClassVar[str] = "claim"
+    text: str
+    subject: str
+    predicate: str
+    object: str
+    polarity: Literal["supports", "opposes", "neutral"]
+    confidence: float = Field(ge=0.0, le=1.0)
+    source_id: str
+    report_id: str
+    embedding: Optional[List[float]] = None
+    confidence_version: Optional[str] = None
+    model_confidence: Optional[float] = None
+
+    @field_validator("report_id", "source_id", mode="before")
+    @classmethod
+    def parse_record_id(cls, value):
+        if value is None:
+            return None
+        if hasattr(value, "id"):
+            return str(value.id)
+        return str(value)
+

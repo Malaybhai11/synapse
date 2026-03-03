@@ -59,7 +59,7 @@ async def search_knowledge_base(search_request: SearchRequest):
 
 
 async def stream_ask_response(
-    question: str, strategy_model: Model, answer_model: Model, final_answer_model: Model
+    question: str, strategy_model: Model, answer_model: Model, final_answer_model: Model, ask_request=None
 ) -> AsyncGenerator[str, None]:
     """Stream the ask response as Server-Sent Events."""
     try:
@@ -72,6 +72,7 @@ async def stream_ask_response(
                     strategy_model=strategy_model.id,
                     answer_model=answer_model.id,
                     final_answer_model=final_answer_model.id,
+                    mode=ask_request.mode if hasattr(ask_request, 'mode') else "default"
                 )
             ),
             stream_mode="updates",
@@ -143,9 +144,14 @@ async def ask_knowledge_base(ask_request: AskRequest):
             )
 
         # For streaming response
+        ask_request_mode = ask_request.mode if hasattr(ask_request, 'mode') else "default"
+        # Since AskRequest is a pydantic model, we check if mode is present or dynamically set it in config stream
+        # Actually stream_ask_response takes ask_request as well, let's just intercept it there. Wait, stream_ask_response signature doesn't take ask_request.
+        
+        # Let's patch stream_ask_response
         return StreamingResponse(
             stream_ask_response(
-                ask_request.question, strategy_model, answer_model, final_answer_model
+                ask_request.question, strategy_model, answer_model, final_answer_model, ask_request
             ),
             media_type="text/plain",
         )
@@ -198,6 +204,7 @@ async def ask_knowledge_base_simple(ask_request: AskRequest):
                     strategy_model=strategy_model.id,
                     answer_model=answer_model.id,
                     final_answer_model=final_answer_model.id,
+                    mode=ask_request.mode if hasattr(ask_request, 'mode') else "default"
                 )
             ),
             stream_mode="updates",

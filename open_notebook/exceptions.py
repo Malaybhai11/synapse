@@ -40,6 +40,25 @@ class ConfigurationError(OpenNotebookError):
     pass
 
 
+class SchemaValidationError(OpenNotebookError):
+    """Raised when an LLM response fails structural validation persistently."""
+    def __init__(self, message: str, errors: list, retries_used: int, raw_output_excerpt: str):
+        super().__init__(message)
+        self.error_code = "SCHEMA_VALIDATION_FAILED"
+        self.errors = errors
+        self.retries_used = retries_used
+        self.raw_output_excerpt = raw_output_excerpt
+
+    def to_dict(self):
+        return {
+            "error": self.error_code,
+            "message": str(self),
+            "retries": self.retries_used,
+            "details": self.errors,
+            "raw_excerpt": self.raw_output_excerpt
+        }
+
+
 class ExternalServiceError(OpenNotebookError):
     """Raised when an external service (e.g., AI model) fails."""
 
