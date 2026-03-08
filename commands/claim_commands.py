@@ -160,6 +160,12 @@ async def extract_claims_command(input_data: ExtractClaimsInput) -> ExtractClaim
             claims_extracted=saved_claims,
             processing_time=proc_time
         )
+    finally:
+        # Step 6: Chain Citation Enforcement
+        if os.getenv("SYNAPSE_ENABLE_CLAIM_INGESTION", "true").lower() == "true":
+            from surreal_commands import submit_command
+            submit_command("open_notebook", "enforce_citations", {"report_id": str(report_id)})
+            logger.info(f"Chained enforce_citations for report {report_id}")
         
     except ValueError as e:
         logger.error(f"Permanent failure extracting claims for {input_data.report_id}: {e}")

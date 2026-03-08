@@ -1,6 +1,7 @@
 import asyncio
 import os
 from pathlib import Path
+from datetime import datetime
 from typing import Any, ClassVar, Dict, List, Literal, Optional, Tuple, Union
 
 from loguru import logger
@@ -711,6 +712,15 @@ class Claim(ObjectModel):
     embedding: Optional[List[float]] = None
     confidence_version: Optional[str] = None
     model_confidence: Optional[float] = None
+    
+    # Phase 6: Citation Enforcement
+    evidence_chunks: List[str] = Field(default_factory=list)
+    source_documents: List[str] = Field(default_factory=list)
+    evidence_score: float = 0.0
+    grounding_strength: Literal["strongly grounded", "weakly grounded", "ungrounded"] = "ungrounded"
+    grounded: bool = False
+    grounding_method: Optional[str] = None
+    grounded_at: Optional[datetime] = None
 
     @field_validator("report_id", "source_id", mode="before")
     @classmethod

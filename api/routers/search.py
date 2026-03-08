@@ -10,6 +10,9 @@ from open_notebook.ai.models import Model, model_manager
 from open_notebook.domain.notebook import text_search, vector_search
 from open_notebook.exceptions import DatabaseOperationError, InvalidInputError
 from open_notebook.graphs.ask import graph as ask_graph
+from api.command_service import CommandService
+from api.routers.commands import CommandJobResponse, CommandJobStatusResponse
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -222,3 +225,62 @@ async def ask_knowledge_base_simple(ask_request: AskRequest):
     except Exception as e:
         logger.error(f"Error in ask simple endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Ask operation failed: {str(e)}")
+
+
+class ResearchStartRequest(BaseModel):
+    query: str
+
+@router.post("/search/research/start", response_model=CommandJobResponse)
+async def start_research_orchestration(request: ResearchStartRequest):
+    """
+    Start a background deep research orchestration job for a complex query.
+    Returns a job ID for polling.
+    """
+    try:
+        job_id = await CommandService.submit_command_job(
+            module_name="open_notebook",
+            command_name="run_orchestrated_research",
+            command_args={"query": request.query},
+        )
+        return CommandJobResponse(
+            job_id=job_id,
+            status="submitted",
+            message="Research orchestration started successfully."
+        )
+    except Exception as e:
+        logger.error(f"Error starting research orchestration: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to start research orchestration")
+
+@router.get("/search/research/status/{job_id}", response_model=CommandJobStatusResponse)
+async def get_research_status(job_id: str):
+    """
+    Poll the status of a background research orchestration job.
+    """
+    try:
+        status_data = await CommandService.get_command_status(job_id)
+        return CommandJobStatusResponse(**status_data)
+    except Exception as e:
+        logger.error(f"Error fetching research status: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch research status")
+
+@router.get("/search/research/result/{job_id}")
+async def get_research_result(job_id: str):
+    """
+    Fetch the result of a completed research orchestration job.
+    """
+    try:
+        status_data = await CommandService.get_command_status(job_id)
+        if status_data.get("status") != "completed":
+            raise HTTPException(status_code=400, detail=f"Job is not completed yet. Current status: {status_data.get('status')}")
+            
+        result = status_data.get("result", {})
+        if not result or not result.get("success"):
+            raise HTTPException(status_code=500, detail=result.get("error_message", "Unknown error occurred during orchestration"))
+            
+        return {"report_id": result.get("report_id"), "latency_ms": result.get("latency_ms")}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching research result: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch research result")
