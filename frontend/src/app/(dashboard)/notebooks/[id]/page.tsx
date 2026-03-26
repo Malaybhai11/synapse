@@ -15,6 +15,7 @@ import { useTranslation } from '@/lib/hooks/use-translation'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FileText, StickyNote, MessageSquare } from 'lucide-react'
+import { useImmersiveModeStore } from '@/lib/stores/immersive-mode-store'
 
 export type ContextMode = 'off' | 'insights' | 'full'
 
@@ -26,6 +27,7 @@ export interface ContextSelections {
 export default function NotebookPage() {
   const { t } = useTranslation()
   const params = useParams()
+  const { isImmersive } = useImmersiveModeStore()
 
   // Ensure the notebook ID is properly decoded from URL
   const notebookId = params?.id ? decodeURIComponent(params.id as string) : ''
@@ -121,11 +123,11 @@ export default function NotebookPage() {
   return (
     <AppShell>
       <div className="flex flex-col flex-1 min-h-0 bg-background">
-        <div className="flex-shrink-0 p-6 pb-2">
+        <div className={cn("flex-shrink-0 p-6 pb-2", isImmersive && "p-0")}>
           <NotebookHeader notebook={notebook} />
         </div>
 
-        <div className="flex-1 px-6 pb-6 pt-2 overflow-hidden flex flex-col">
+        <div className={cn("flex-1 px-6 pb-6 pt-2 overflow-hidden flex flex-col", isImmersive && "px-2 pb-2 pt-0")}>
           {/* Unified Tabbed Interface */}
           <div className="flex-shrink-0 mb-6">
             <Tabs
@@ -133,7 +135,7 @@ export default function NotebookPage() {
               onValueChange={(value) => setActiveTab(value as 'sources' | 'notes' | 'chat')}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto p-1 bg-muted/30 backdrop-blur-sm border border-border/50 rounded-xl">
+              <TabsList className="grid w-full grid-cols-3 p-1 bg-muted/30 backdrop-blur-sm border border-border/50 rounded-xl">
                 <TabsTrigger
                   value="sources"
                   className={cn(

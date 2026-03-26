@@ -164,7 +164,7 @@ export default function SearchPage() {
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'ask' | 'search')} className="w-full space-y-6">
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t.searchPage.chooseAMode}</p>
-            <TabsList aria-label={t.common.accessibility.searchKB} className="w-full max-w-xl">
+            <TabsList aria-label={t.common.accessibility.searchKB} className="w-full">
               <TabsTrigger value="ask">
                 <MessageCircleQuestion className="h-4 w-4" />
                 {t.searchPage.askBeta}

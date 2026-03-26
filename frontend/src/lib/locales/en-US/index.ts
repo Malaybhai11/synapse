@@ -129,6 +129,8 @@ export const enUS = {
       clickToCycle: "Click to cycle",
     },
     clickToEdit: "Click to edit",
+    enterImmersive: "Enter Immersive Mode",
+    exitImmersive: "Exit Immersive Mode",
   },
   apiErrors: {
     notebookNotFound: "Notebook not found",

@@ -27,6 +27,7 @@ import { LanguageToggle } from '@/components/common/LanguageToggle'
 import { TranslationKeys } from '@/lib/locales'
 import { useTranslation } from '@/lib/hooks/use-translation'
 import { Separator } from '@/components/ui/separator'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Book,
   Search,
@@ -109,7 +110,7 @@ export function AppSidebar() {
       <div
         className={cn(
           'app-sidebar flex h-full flex-col bg-sidebar border-sidebar-border border-r transition-all duration-300',
-          isCollapsed ? 'w-16' : 'w-64'
+          isCollapsed ? 'w-20' : 'w-72'
         )}
       >
         <div
@@ -157,16 +158,17 @@ export function AppSidebar() {
           )}
         </div>
 
-        <nav
-          className={cn(
-            'flex-1 space-y-1 py-4',
-            isCollapsed ? 'px-2' : 'px-3'
-          )}
-        >
+        <ScrollArea className={cn(
+          'flex-1 min-h-0',
+          isCollapsed ? 'px-3' : 'px-4'
+        )}>
+          <nav
+            className="space-y-2 py-6"
+          >
           <div
             className={cn(
-              'mb-4',
-              isCollapsed ? 'px-0' : 'px-3'
+              'mb-6',
+              isCollapsed ? 'px-0' : 'px-1'
             )}
           >
             <DropdownMenu open={createMenuOpen} onOpenChange={setCreateMenuOpen}>
@@ -177,8 +179,8 @@ export function AppSidebar() {
                       <Button
                         onClick={() => setCreateMenuOpen(true)}
                         variant="default"
-                        size="sm"
-                        className="w-full justify-center px-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0"
+                        size="default"
+                        className="w-full justify-center px-0 h-10 bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-lg"
                         aria-label={t.common.create}
                       >
                         <Plus className="h-4 w-4" />
@@ -192,8 +194,8 @@ export function AppSidebar() {
                   <Button
                     onClick={() => setCreateMenuOpen(true)}
                     variant="default"
-                    size="sm"
-                    className="w-full justify-start bg-primary hover:bg-primary/90 text-primary-foreground border-0"
+                    size="default"
+                    className="w-full justify-start h-11 bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-md transform transition-transform active:scale-95"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     {t.common.create}
@@ -241,9 +243,9 @@ export function AppSidebar() {
           </div>
 
           {navigation.map((section, index) => (
-            <div key={section.title}>
+            <div key={section.title} className="mb-4">
               {index > 0 && (
-                <Separator className="my-3" />
+                <Separator className="my-4 opacity-50" />
               )}
               <div className="space-y-1">
                 {!isCollapsed && (
@@ -290,7 +292,8 @@ export function AppSidebar() {
               </div>
             </div>
           ))}
-        </nav>
+          </nav>
+        </ScrollArea>
 
         <div
           className={cn(
