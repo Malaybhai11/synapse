@@ -67,7 +67,7 @@ async def get_latest_version_cached(current_version: str) -> tuple[Optional[str]
 
         # Fetch latest version from GitHub with 10-second timeout
         latest_version = await get_version_from_github_async(
-            "https://github.com/lfnovo/open-notebook", "main"
+            "https://github.com/Malaybhai11/synapse", "main"
         )
 
         logger.info(

@@ -16,13 +16,13 @@ Clone the repository and run locally. **For developers and contributors.**
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/lfnovo/open-notebook.git
+git clone https://github.com/Malaybhai11/synapse.git
 cd open-notebook
 
 # If you forked it:
 git clone https://github.com/YOUR_USERNAME/open-notebook.git
 cd open-notebook
-git remote add upstream https://github.com/lfnovo/open-notebook.git
+git remote add upstream https://github.com/Malaybhai11/synapse.git
 ```
 
 ### 2. Install Python Dependencies
@@ -177,4 +177,4 @@ uv run uvicorn api.main:app --port 5056
 ## Getting Help
 
 - **Discord**: [Community](https://discord.gg/37XJPXfz2w)
-- **Issues**: [GitHub Issues](https://github.com/lfnovo/open-notebook/issues)
+- **Issues**: [GitHub Issues](https://github.com/Malaybhai11/synapse/issues)

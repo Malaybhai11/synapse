@@ -17,11 +17,11 @@ Before you start, ensure you have the following installed:
 
 ```bash
 # Clone the repository
-git clone https://github.com/lfnovo/open-notebook.git
+git clone https://github.com/Malaybhai11/synapse.git
 cd open-notebook
 
 # Add upstream remote for keeping your fork updated
-git remote add upstream https://github.com/lfnovo/open-notebook.git
+git remote add upstream https://github.com/Malaybhai11/synapse.git
 ```
 
 ## Step 2: Install Python Dependencies

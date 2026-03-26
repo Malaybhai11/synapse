@@ -17,7 +17,7 @@ git clone https://github.com/YOUR_USERNAME/open-notebook.git
 cd open-notebook
 
 # Add upstream remote for updates
-git remote add upstream https://github.com/lfnovo/open-notebook.git
+git remote add upstream https://github.com/Malaybhai11/synapse.git
 ```
 
 ## 2. Install Dependencies (2 min)
@@ -59,7 +59,7 @@ cd frontend && npm run dev
 
 ## Next Steps
 
-- **First Issue?** Pick a [good first issue](https://github.com/lfnovo/open-notebook/issues?q=label%3A%22good+first+issue%22)
+- **First Issue?** Pick a [good first issue](https://github.com/Malaybhai11/synapse/issues?q=label%3A%22good+first+issue%22)
 - **Understand the code?** Read [Architecture Overview](architecture.md)
 - **Make changes?** Follow [Contributing Guide](contributing.md)
 - **Setup details?** See [Development Setup](development-setup.md)

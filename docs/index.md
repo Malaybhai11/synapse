@@ -257,7 +257,7 @@ A: → [7-DEVELOPMENT](../7-DEVELOPMENT/index.md) — Contributing guide
 ## 📞 Getting Help
 
 - **Discord Community** — https://discord.gg/37XJPXfz2w
-- **GitHub Issues** — https://github.com/lfnovo/open-notebook/issues
+- **GitHub Issues** — https://github.com/Malaybhai11/synapse/issues
 - **Documentation** — You're reading it!
 
 ---

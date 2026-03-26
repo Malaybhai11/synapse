@@ -10,6 +10,7 @@ from open_notebook.ai.claim_extractor import process_report_for_claims
 from open_notebook.ai.confidence_estimator import estimate_claim_confidence, DEFAULT_CONFIDENCE_VERSION
 from open_notebook.utils.embedding import generate_embeddings
 import math
+import os
 
 def cosine_similarity(v1: list[float], v2: list[float]) -> float:
     dot_product = sum(a * b for a, b in zip(v1, v2))
@@ -160,12 +161,6 @@ async def extract_claims_command(input_data: ExtractClaimsInput) -> ExtractClaim
             claims_extracted=saved_claims,
             processing_time=proc_time
         )
-    finally:
-        # Step 6: Chain Citation Enforcement
-        if os.getenv("SYNAPSE_ENABLE_CLAIM_INGESTION", "true").lower() == "true":
-            from surreal_commands import submit_command
-            submit_command("open_notebook", "enforce_citations", {"report_id": str(report_id)})
-            logger.info(f"Chained enforce_citations for report {report_id}")
         
     except ValueError as e:
         logger.error(f"Permanent failure extracting claims for {input_data.report_id}: {e}")
@@ -196,3 +191,9 @@ async def extract_claims_command(input_data: ExtractClaimsInput) -> ExtractClaim
         except:
             pass
         raise
+    finally:
+        # Step 6: Chain Citation Enforcement
+        if os.getenv("SYNAPSE_ENABLE_CLAIM_INGESTION", "true").lower() == "true":
+            from surreal_commands import submit_command
+            submit_command("open_notebook", "enforce_citations", {"report_id": str(input_data.report_id)})
+            logger.info(f"Chained enforce_citations for report {input_data.report_id}")

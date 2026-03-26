@@ -19,7 +19,7 @@ curl -o docker-compose.yml https://raw.githubusercontent.com/lfnovo/open-noteboo
 
 **Option B: Use the official file from the repo**
 
-The official `docker-compose.yml` is in the root of our repository: [View on GitHub](https://github.com/lfnovo/open-notebook/blob/main/docker-compose.yml)
+The official `docker-compose.yml` is in the root of our repository: [View on GitHub](https://github.com/Malaybhai11/synapse/blob/main/docker-compose.yml)
 
 Copy that file to your project folder.
 
@@ -354,5 +354,5 @@ For production use, see:
 ## Getting Help
 
 - **Discord**: [Community support](https://discord.gg/37XJPXfz2w)
-- **Issues**: [GitHub Issues](https://github.com/lfnovo/open-notebook/issues)
+- **Issues**: [GitHub Issues](https://github.com/Malaybhai11/synapse/issues)
 - **Docs**: [Full documentation](../index.md)
