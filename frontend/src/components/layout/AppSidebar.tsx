@@ -42,6 +42,7 @@ import {
   Plus,
   Wrench,
   Command,
+  Scale,
 } from 'lucide-react'
 
 const getNavigation = (t: TranslationKeys) => [
@@ -49,6 +50,12 @@ const getNavigation = (t: TranslationKeys) => [
     title: t.navigation.collect,
     items: [
       { name: t.navigation.sources, href: '/sources', icon: FileText },
+    ],
+  },
+  {
+    title: t.navigation.modes,
+    items: [
+      { name: t.navigation.hypothesisMode, href: '/hypothesis', icon: Scale },
     ],
   },
   {

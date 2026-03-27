@@ -216,6 +216,8 @@ export const enUS = {
     language: "Toggle language",
     theme: "Theme",
     ask: "Ask",
+    modes: "Modes",
+    hypothesisMode: "Hypothesis Mode",
   },
   notebooks: {
     title: "Notebooks",
