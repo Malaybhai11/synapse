@@ -214,6 +214,9 @@ export const itIT = {
     language: "Cambia lingua",
     theme: "Tema",
     ask: "Chiedi",
+    modes: "Modalità",
+    hypothesisMode: "Modalità Ipotesi",
+    critiqueMode: "Modalità Critica",
   },
   notebooks: {
     title: "Quaderni",

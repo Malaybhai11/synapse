@@ -214,6 +214,9 @@ export const ptBR = {
     language: "Alternar idioma",
     theme: "Tema",
     ask: "Perguntar",
+    modes: "Modos",
+    hypothesisMode: "Modo Hipótese",
+    critiqueMode: "Modo Crítica",
   },
   notebooks: {
     title: "Cadernos",

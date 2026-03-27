@@ -1,4 +1,5 @@
 import json
+import re
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
@@ -35,7 +36,10 @@ class HypothesisResponse(BaseModel):
     confidenceScore: int
     proponentEvidence: List[EvidenceItem]
     opponentEvidence: List[EvidenceItem]
+    proponentThink: Optional[str] = None
+    opponentThink: Optional[str] = None
     judgeSynthesis: str
+    judgeThink: Optional[str] = None
 
 async def _gather_notebook_context(query: str) -> str:
     """Retrieve context from the user's notebooks via vector search."""
@@ -94,9 +98,12 @@ async def evaluate_hypothesis(request: HypothesisRequest):
         web_context = ""
         if request.includeWebSearch:
             try:
-                from langchain_community.tools import DuckDuckGoSearchRun
-                search = DuckDuckGoSearchRun()
-                web_context = search.run(request.query)
+                from duckduckgo_search import DDGS
+                results = DDGS().text(request.query, max_results=5)
+                web_context = "\n\n".join([
+                    f"Title: {r.get('title', 'No Title')}\nSnippet: {r.get('body', 'No snippet')}\nSource: {r.get('href', '')}" 
+                    for r in results
+                ])
             except Exception as e:
                 logger.warning(f"Web search failed: {e}")
                 web_context = "Web search failed or not available."
@@ -106,15 +113,25 @@ async def evaluate_hypothesis(request: HypothesisRequest):
         # 2. Reformulate Hypothesis
         formal_hypothesis = request.query # Simplifying: could use another LLM call to formalize it.
         
+        def _extract_think(text: str) -> tuple[Optional[str], str]:
+            think_match = re.search(r'<think>(.*?)</think>', text, flags=re.DOTALL)
+            if think_match:
+                think_text = think_match.group(1).strip()
+                main_text = text.replace(think_match.group(0), "").strip()
+                return think_text, main_text
+            return None, text.strip()
+
         # 3. Proponent Agent
         proponent_system = "You are the Proponent. Your job is to extract and summarize all evidence that directly SUPPORTS the user's hypothesis. Only use the provided context. Format the output as a JSON list of objects with 'title', 'snippet', and 'score' (1-100)."
         proponent_query = f"Hypothesis: {formal_hypothesis}\n\nContext:\n{full_context}"
         proponent_raw = await _call_llm(request.models.proponentModel, proponent_system, proponent_query)
+        prop_think, prop_content = _extract_think(proponent_raw)
         
         # 4. Opponent Agent
         opponent_system = "You are the Opponent. Your job is to extract and summarize all evidence that contradicts, questions, or OPPOSES the user's hypothesis. Only use the provided context. Format the output as a JSON list of objects with 'title', 'snippet', and 'score' (1-100)."
         opponent_query = f"Hypothesis: {formal_hypothesis}\n\nContext:\n{full_context}"
         opponent_raw = await _call_llm(request.models.opponentModel, opponent_system, opponent_query)
+        opp_think, opp_content = _extract_think(opponent_raw)
         
         # Parse JSON securely 
         def _parse_evidence(raw_text, source_type="notebook"):
@@ -152,13 +169,14 @@ async def evaluate_hypothesis(request: HypothesisRequest):
                 ))
             return items
             
-        prop_evidence = _parse_evidence(proponent_raw, "notebook")
-        opp_evidence = _parse_evidence(opponent_raw, "notebook")
+        prop_evidence = _parse_evidence(prop_content, "notebook")
+        opp_evidence = _parse_evidence(opp_content, "notebook")
         
         # 5. Judge Agent
         judge_system = "You are the Judge. You will receive a hypothesis, supporting evidence, and opposing evidence. Synthesize a nuanced final paragraph concluding the debate. Do not output json, just the final string."
-        judge_query = f"Hypothesis: {formal_hypothesis}\n\nSupporting: {proponent_raw}\n\nOpposing: {opponent_raw}"
-        judge_synthesis = await _call_llm(request.models.judgeModel, judge_system, judge_query)
+        judge_query = f"Hypothesis: {formal_hypothesis}\n\nSupporting: {prop_content}\n\nOpposing: {opp_content}"
+        judge_raw = await _call_llm(request.models.judgeModel, judge_system, judge_query)
+        judge_think, judge_content = _extract_think(judge_raw)
         
         # 6. Calculate Confidence
         prop_score = sum([e.score for e in prop_evidence])
@@ -171,7 +189,10 @@ async def evaluate_hypothesis(request: HypothesisRequest):
             confidenceScore=confidence,
             proponentEvidence=prop_evidence,
             opponentEvidence=opp_evidence,
-            judgeSynthesis=judge_synthesis
+            proponentThink=prop_think,
+            opponentThink=opp_think,
+            judgeSynthesis=judge_content,
+            judgeThink=judge_think
         )
         
     except Exception as e:

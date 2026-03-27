@@ -3,13 +3,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { HypothesisResponse, EvidenceItem } from '@/lib/types/hypothesis'
-import { Scale, CheckCircle2, XCircle, Globe, Book, ExternalLink } from 'lucide-react'
+import { Scale, CheckCircle2, XCircle, Globe, Book, ExternalLink, Brain, ChevronDown } from 'lucide-react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
 interface HypothesisReportProps {
   data: HypothesisResponse
 }
 
 export function HypothesisReport({ data }: HypothesisReportProps) {
+  const ReasoningBlock = ({ think }: { think?: string }) => {
+    if (!think) return null;
+    return (
+      <Collapsible className="w-full mt-4 bg-muted/20 border border-muted-foreground/10 rounded-lg p-3 group">
+        <CollapsibleTrigger className="flex items-center justify-between w-full text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">
+          <span className="flex items-center gap-2"><Brain className="h-3.5 w-3.5" /> Agent Thought Process</span>
+          <ChevronDown className="h-3.5 w-3.5 opacity-50 transition-transform group-data-[state=open]:rotate-180" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-3 pt-3 border-t border-muted-foreground/10 text-[13px] text-muted-foreground/80 whitespace-pre-wrap font-mono leading-relaxed">
+          {think}
+        </CollapsibleContent>
+      </Collapsible>
+    )
+  }
+
   const renderEvidence = (items: EvidenceItem[], side: 'for' | 'against') => {
     if (!items || items.length === 0) {
       return (
@@ -100,7 +116,10 @@ export function HypothesisReport({ data }: HypothesisReportProps) {
             <h3 className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">Supporting Evidence</h3>
             <Badge variant="secondary" className="ml-auto bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20">{data.proponentEvidence.length}</Badge>
           </div>
-          {renderEvidence(data.proponentEvidence, 'for')}
+          <div className="flex flex-col gap-1">
+            <ReasoningBlock think={data.proponentThink} />
+            {renderEvidence(data.proponentEvidence, 'for')}
+          </div>
         </div>
 
         {/* Opponent (Evidence Against) */}
@@ -110,7 +129,10 @@ export function HypothesisReport({ data }: HypothesisReportProps) {
             <h3 className="text-lg font-semibold text-rose-600 dark:text-rose-400">Opposing Evidence</h3>
             <Badge variant="secondary" className="ml-auto bg-rose-500/10 text-rose-600 hover:bg-rose-500/20">{data.opponentEvidence.length}</Badge>
           </div>
-          {renderEvidence(data.opponentEvidence, 'against')}
+          <div className="flex flex-col gap-1">
+            <ReasoningBlock think={data.opponentThink} />
+            {renderEvidence(data.opponentEvidence, 'against')}
+          </div>
         </div>
       </div>
 
@@ -126,6 +148,7 @@ export function HypothesisReport({ data }: HypothesisReportProps) {
           <div className="prose prose-sm dark:prose-invert max-w-none text-base leading-relaxed">
             {data.judgeSynthesis || "No synthesis available."}
           </div>
+          <ReasoningBlock think={data.judgeThink} />
         </CardContent>
       </Card>
     </div>

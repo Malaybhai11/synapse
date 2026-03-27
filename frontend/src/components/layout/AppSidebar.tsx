@@ -43,6 +43,7 @@ import {
   Wrench,
   Command,
   Scale,
+  ShieldAlert,
 } from 'lucide-react'
 
 const getNavigation = (t: TranslationKeys) => [
@@ -56,6 +57,7 @@ const getNavigation = (t: TranslationKeys) => [
     title: t.navigation.modes,
     items: [
       { name: t.navigation.hypothesisMode, href: '/hypothesis', icon: Scale },
+      { name: t.navigation.critiqueMode, href: '/validator', icon: ShieldAlert },
     ],
   },
   {

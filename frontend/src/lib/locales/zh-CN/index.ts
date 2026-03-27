@@ -214,6 +214,9 @@ export const zhCN = {
     language: "切换语言",
     theme: "主题",
     ask: "提问",
+    modes: "模式",
+    hypothesisMode: "假设模式",
+    critiqueMode: "评判模式",
   },
   notebooks: {
     title: "笔记本",

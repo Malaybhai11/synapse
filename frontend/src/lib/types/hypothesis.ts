@@ -22,5 +22,8 @@ export interface HypothesisResponse {
   confidenceScore: number; // 0-100
   proponentEvidence: EvidenceItem[];
   opponentEvidence: EvidenceItem[];
+  proponentThink?: string;
+  opponentThink?: string;
   judgeSynthesis: string;
+  judgeThink?: string;
 }

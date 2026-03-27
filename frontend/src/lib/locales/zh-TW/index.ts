@@ -214,6 +214,9 @@ export const zhTW = {
     language: "切換語言",
     theme: "主題",
     ask: "提問",
+    modes: "模式",
+    hypothesisMode: "假設模式",
+    critiqueMode: "評判模式",
   },
   notebooks: {
     title: "筆記本",

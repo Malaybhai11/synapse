@@ -214,6 +214,9 @@ export const frFR = {
     language: "Changer de langue",
     theme: "Thème",
     ask: "Demander",
+    modes: "Modes",
+    hypothesisMode: "Mode Hypothèse",
+    critiqueMode: "Mode Critique",
   },
   notebooks: {
     title: "Carnets",

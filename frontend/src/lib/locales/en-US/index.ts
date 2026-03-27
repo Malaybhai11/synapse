@@ -218,6 +218,7 @@ export const enUS = {
     ask: "Ask",
     modes: "Modes",
     hypothesisMode: "Hypothesis Mode",
+    critiqueMode: "Critique Mode",
   },
   notebooks: {
     title: "Notebooks",
