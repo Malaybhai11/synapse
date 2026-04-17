@@ -1,40 +1,52 @@
 import json
 import re
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 from pydantic import BaseModel
 
-from open_notebook.ai.models import model_manager, Model
-from open_notebook.ai.provision import provision_langchain_model
-from langchain_core.messages import SystemMessage, HumanMessage
-from open_notebook.domain.notebook import vector_search
+from api.routers.mode_utils import (
+    call_llm,
+    clamp_score,
+    extract_think,
+    gather_context_documents,
+    normalize_enum,
+    parse_json_array,
+    serialize_context_documents,
+)
+from open_notebook.ai.models import Model, model_manager
 
 router = APIRouter()
+
 
 class ValidatorModelsInput(BaseModel):
     analyzerModel: str
     redTeamModel: str
     strategistModel: str
 
+
 class ValidatorRequest(BaseModel):
     idea: str
-    sourceType: str # "notebook", "web", "both"
+    sourceType: Literal["notebook", "web", "both"]
     models: ValidatorModelsInput
+
 
 class Assumption(BaseModel):
     description: str
 
+
 class Vulnerability(BaseModel):
     title: str
     description: str
-    severity: str # "High", "Medium", "Low"
-    score: int # 1 - 100
+    severity: Literal["High", "Medium", "Low"]
+    score: int
+
 
 class Mitigation(BaseModel):
     description: str
-    effort: str # "High", "Medium", "Low"
+    effort: Literal["High", "Medium", "Low"]
+
 
 class ValidatorResponse(BaseModel):
     idea: str
@@ -46,157 +58,301 @@ class ValidatorResponse(BaseModel):
     redTeamThink: Optional[str] = None
     strategistThink: Optional[str] = None
 
-async def _gather_notebook_context(query: str) -> str:
+
+ANALYZER_PROMPT = """You are the Analyzer.
+
+Break the idea into the core assumptions that must hold true.
+Return ONLY a JSON array. Each item must be:
+{"description":"..."}
+
+Rules:
+- Use the provided idea and evidence only.
+- Keep assumptions concrete and decision-relevant.
+- If the evidence is sparse, still identify the most important assumptions implied by the idea.
+"""
+
+
+RED_TEAM_PROMPT = """You are the Red Team.
+
+Attack the idea and assumptions using only the provided evidence.
+Return ONLY a JSON array. Each item must be:
+{"title":"...","description":"...","severity":"High|Medium|Low","score":0-100}
+
+Rules:
+- Focus on concrete failure modes, hidden dependencies, and edge cases.
+- Prefer a shorter list of high-signal vulnerabilities over generic filler.
+- Scores represent risk severity, not confidence.
+"""
+
+
+STRATEGIST_PROMPT = """You are the Strategist.
+
+You will receive an idea and a list of vulnerabilities.
+Return ONLY a JSON array. Each item must be:
+{"description":"...","effort":"High|Medium|Low"}
+
+Rules:
+- Suggest practical mitigations tied to the stated vulnerabilities.
+- Do not restate the problem without proposing an action.
+
+IMPORTANT: After the mitigation array, provide an overall risk assessment as a JSON object:
+{"risk_score": 0-100, "rationale": "brief explanation"}
+
+The risk_score should reflect:
+- Severity and likelihood of vulnerabilities (0-50 points)
+- Number of critical/high severity issues (0-30 points)
+- Ease of exploitation and attack surface (0-20 points)
+"""
+
+
+SEVERITY_SCORE_DEFAULTS = {
+    "High": 85.0,
+    "Medium": 55.0,
+    "Low": 25.0,
+}
+
+
+async def _validate_language_model(model_id: str, field_name: str) -> None:
     try:
-        results = await vector_search(
-            keyword=query,
-            results=10,
-            source=True,
-            note=True,
-            minimum_score=0.2
+        model = await Model.get(model_id)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{field_name} model {model_id} not found",
+        ) from exc
+
+    if model.type != "language":
+        raise HTTPException(
+            status_code=400,
+            detail=f"{field_name} model {model_id} must be a language model",
         )
-        if not results:
-            return "No relevant context found in notebooks."
-        
-        context_parts = []
-        for res in results:
-            content = res.get("full_text", "") or res.get("content", "")
-            title = res.get("title", "Untitled")
-            context_parts.append(f"Document [{title}]:\n{content}")
-            
-        return "\n\n".join(context_parts)
-    except Exception as e:
-        logger.error(f"Error gathering notebook context: {e}")
-        return "Failed to access notebook context."
 
-def _extract_think(text: str) -> tuple[Optional[str], str]:
-    think_match = re.search(r'<think>(.*?)</think>', text, flags=re.DOTALL)
-    if think_match:
-        think_text = think_match.group(1).strip()
-        main_text = text.replace(think_match.group(0), "").strip()
-        return think_text, main_text
-    return None, text.strip()
 
-async def _call_llm(model_id: str, system_prompt: str, user_prompt: str) -> str:
-    try:
-        llm = await provision_langchain_model(
-            content=user_prompt,
-            model_id=model_id,
-            default_type="chat"
+def _build_assumptions(items: list[dict]) -> list[Assumption]:
+    assumptions: list[Assumption] = []
+    seen: set[str] = set()
+    for item in items:
+        description = str(item.get("description", "")).strip()
+        if not description or description in seen:
+            continue
+        seen.add(description)
+        assumptions.append(Assumption(description=description))
+    return assumptions
+
+
+def _build_vulnerabilities(items: list[dict]) -> list[Vulnerability]:
+    vulnerabilities: list[Vulnerability] = []
+    seen: set[tuple[str, str]] = set()
+
+    for item in items:
+        title = str(item.get("title", "Risk")).strip() or "Risk"
+        description = str(item.get("description", "")).strip()
+        if not description:
+            continue
+        severity = _normalize_severity(item.get("severity"))
+        key = (title, description)
+        if key in seen:
+            continue
+        seen.add(key)
+        vulnerabilities.append(
+            Vulnerability(
+                title=title,
+                description=description,
+                severity=severity,
+                score=int(
+                    round(
+                        clamp_score(
+                            item.get("score"),
+                            default=SEVERITY_SCORE_DEFAULTS[severity],
+                        )
+                    )
+                ),
+            )
         )
-        response = await llm.ainvoke([
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=user_prompt)
-        ])
-        return response.content
-    except Exception as e:
-        logger.error(f"Error calling LLM {model_id}: {e}")
-        return f"Model Error: {str(e)}"
 
-def _parse_json_list(raw_text: str, fallback_item: dict) -> list:
-    items = []
-    try:
-        if "```json" in raw_text:
-            raw_text = raw_text.split("```json")[1].split("```")[0]
-        elif "```" in raw_text:
-            raw_text = raw_text.split("```")[1].split("```")[0]
-            
-        start = raw_text.find('[')
-        end = raw_text.rfind(']')
-        if start != -1 and end != -1:
-            raw_text = raw_text[start:end+1]
-            
-        return json.loads(raw_text.strip())
-    except Exception as e:
-        logger.error(f"Failed to parse json: {e}\nRaw:{raw_text}")
-        return [fallback_item]
+    vulnerabilities.sort(key=lambda item: item.score, reverse=True)
+    return vulnerabilities
+
+
+def _normalize_severity(value: object) -> Literal["High", "Medium", "Low"]:
+    raw_value = str(value or "").strip().lower()
+    if raw_value in {"critical", "severe", "high", "major", "blocker"}:
+        return "High"
+    if raw_value in {"medium", "moderate", "mid"}:
+        return "Medium"
+    if raw_value in {"low", "minor", "small", "minimal"}:
+        return "Low"
+    return "Medium"
+
+
+def _build_mitigations(items: list[dict]) -> list[Mitigation]:
+    mitigations: list[Mitigation] = []
+    seen: set[str] = set()
+    for item in items:
+        description = str(item.get("description", "")).strip()
+        if not description or description in seen:
+            continue
+        seen.add(description)
+        mitigations.append(
+            Mitigation(
+                description=description,
+                effort=normalize_enum(
+                    item.get("effort"),
+                    ("High", "Medium", "Low"),
+                    "Medium",
+                ),
+            )
+        )
+    return mitigations
+
+
+def _parse_strategist_risk_score(strategist_content: str) -> int | None:
+    match = re.search(r'"risk_score"\s*:\s*(\d+(?:\.\d+)?)', strategist_content)
+    if match:
+        return int(round(clamp_score(match.group(1))))
+    match = re.search(
+        r"risk_score[:\s]+(\d+(?:\.\d+)?)",
+        strategist_content,
+        re.IGNORECASE,
+    )
+    if match:
+        return int(round(clamp_score(match.group(1))))
+    return None
+
+
+def _calculate_overall_risk(
+    vulnerabilities: list[Vulnerability],
+    strategist_risk_score: int | None = None,
+) -> int:
+    if not vulnerabilities:
+        return int(round(clamp_score(strategist_risk_score, default=0.0)))
+
+    severity_weights = {"High": 1.0, "Medium": 0.6, "Low": 0.3}
+    weighted_scores = []
+    for vuln in vulnerabilities[:5]:
+        weight = severity_weights.get(vuln.severity, 0.6)
+        weighted_scores.append(vuln.score * weight)
+
+    if not weighted_scores:
+        return 0
+
+    vulnerability_risk = sum(weighted_scores) / len(weighted_scores)
+    if strategist_risk_score is not None:
+        risk_score = (vulnerability_risk * 0.75) + (strategist_risk_score * 0.25)
+    else:
+        risk_score = vulnerability_risk
+
+    return int(round(clamp_score(risk_score, default=0.0)))
+
 
 @router.post("/evaluate", response_model=ValidatorResponse)
 async def evaluate_validator(request: ValidatorRequest):
     try:
-        # Context gathering
-        context = ""
-        
-        if request.sourceType in ["notebook", "both"]:
-            context += f"\n--- INTERNAL KNOWLEDGE BASE ---\n{await _gather_notebook_context(request.idea)}"
-            
-        if request.sourceType in ["web", "both"]:
-            try:
-                from duckduckgo_search import DDGS
-                results = DDGS().text(request.idea, max_results=5)
-                web_context = "\n\n".join([f"Title: {r.get('title')}\nSnippet: {r.get('body')}" for r in results])
-                context += f"\n--- WEB SEARCH RESULTS ---\n{web_context}"
-            except Exception as e:
-                logger.warning(f"Web search failed: {e}")
-                context += "\n--- WEB SEARCH RESULTS ---\nFailed to retrieve."
-
-        if not context:
-            context = "No external context requested."
-
-        # 1. Analyzer Model
-        analyzer_sys = "You are the Analyzer. Break down the user's idea/plan into core assumptions. Output ONLY a valid JSON array of objects with a 'description' field representing an assumption. E.g. [{\"description\": \"Assumption 1\"}]"
-        analyzer_query = f"Idea: {request.idea}\n\nContext:\n{context}"
-        analyzer_raw = await _call_llm(request.models.analyzerModel, analyzer_sys, analyzer_query)
-        analyzer_think, analyzer_content = _extract_think(analyzer_raw)
-        
-        assumptions = _parse_json_list(
-            analyzer_content, 
-            {"description": f"Failed to parse assumptions properly. Raw: {analyzer_content[:150]}"}
+        await _validate_language_model(
+            request.models.analyzerModel, "Analyzer"
         )
-        
-        # 2. Red Team Model
-        redteam_sys = "You are the Red Team (Devil's Advocate). Ruthlessly attack the idea and assumptions to find critical vulnerabilities, edge cases, and failure points. Use the context provided. Output ONLY a valid JSON array of objects with 'title', 'description', 'severity' (High, Medium, Low), and 'score' (1-100 severity metric). E.g. [{\"title\": \"...\", \"description\": \"...\", \"severity\": \"High\", \"score\": 90}]"
-        redteam_query = f"Idea: {request.idea}\n\nAssumptions:\n{json.dumps(assumptions)}\n\nContext:\n{context}"
-        redteam_raw = await _call_llm(request.models.redTeamModel, redteam_sys, redteam_query)
-        redteam_think, redteam_content = _extract_think(redteam_raw)
-        
-        vulnerabilities = _parse_json_list(
-            redteam_content,
-            {"title": "Analysis Error", "description": "Failed to parse vulnerabilities.", "severity": "Medium", "score": 50}
+        await _validate_language_model(
+            request.models.redTeamModel, "Red Team"
         )
-        
-        # 3. Strategist Model
-        strategist_sys = "You are the Strategist. You have seen an idea and its vulnerabilities. Suggest concrete, highly actionable mitigations. Output ONLY a valid JSON array of objects with 'description' and 'effort' (High, Medium, Low). E.g. [{\"description\": \"Do UX testing\", \"effort\": \"Low\"}]"
-        strategist_query = f"Idea: {request.idea}\n\nVulnerabilities:\n{json.dumps(vulnerabilities)}"
-        strategist_raw = await _call_llm(request.models.strategistModel, strategist_sys, strategist_query)
-        strategist_think, strategist_content = _extract_think(strategist_raw)
-        
-        mitigations = _parse_json_list(
-            strategist_content,
-            {"description": "Failed to parse mitigations.", "effort": "Medium"}
+        await _validate_language_model(
+            request.models.strategistModel, "Strategist"
         )
-        
-        # Risk Score Calc
-        if vulnerabilities:
-            scores = [int(v.get("score", 0)) for v in vulnerabilities if isinstance(v, dict)]
-            overall_risk = int(sum(scores) / len(scores)) if scores else 0
-        else:
-            overall_risk = 0
 
-        # Create properly typed list for pydantic
-        parsed_assumptions = [Assumption(description=str(a.get("description", ""))) for a in assumptions if isinstance(a, dict)]
-        parsed_vulns = [Vulnerability(
-            title=str(v.get("title", "Risk")),
-            description=str(v.get("description", "")),
-            severity=str(v.get("severity", "Medium")),
-            score=int(v.get("score", 50))
-        ) for v in vulnerabilities if isinstance(v, dict)]
-        parsed_mits = [Mitigation(
-            description=str(m.get("description", "")),
-            effort=str(m.get("effort", "Medium"))
-        ) for m in mitigations if isinstance(m, dict)]
+        include_notebook = request.sourceType in {"notebook", "both"}
+        include_web = request.sourceType in {"web", "both"}
+
+        if include_notebook and not await model_manager.get_embedding_model():
+            raise HTTPException(
+                status_code=400,
+                detail="Critique mode requires an embedding model for notebook retrieval.",
+            )
+
+        context_documents = await gather_context_documents(
+            request.idea,
+            include_notebook=include_notebook,
+            include_web=include_web,
+        )
+        context_json = serialize_context_documents(context_documents)
+
+        analyzer_query = (
+            f"Idea:\n{request.idea.strip()}\n\n"
+            f"Evidence candidates:\n{context_json}"
+        )
+        analyzer_raw = await call_llm(
+            request.models.analyzerModel,
+            ANALYZER_PROMPT,
+            analyzer_query,
+        )
+        analyzer_think, analyzer_content = extract_think(analyzer_raw)
+        assumptions = _build_assumptions(
+            parse_json_array(
+                analyzer_content,
+                fallback=[{"description": "The proposal depends on unstated assumptions."}],
+            )
+        )
+
+        red_team_query = (
+            f"Idea:\n{request.idea.strip()}\n\n"
+            f"Assumptions:\n{json.dumps([item.model_dump() for item in assumptions], ensure_ascii=False)}\n\n"
+            f"Evidence candidates:\n{context_json}"
+        )
+        red_team_raw = await call_llm(
+            request.models.redTeamModel,
+            RED_TEAM_PROMPT,
+            red_team_query,
+        )
+        red_team_think, red_team_content = extract_think(red_team_raw)
+        vulnerabilities = _build_vulnerabilities(
+            parse_json_array(
+                red_team_content,
+                fallback=[
+                    {
+                        "title": "Analysis Error",
+                        "description": "The critique engine could not produce a structured vulnerability list.",
+                        "severity": "Medium",
+                        "score": 50,
+                    }
+                ],
+            )
+        )
+
+        strategist_query = (
+            f"Idea:\n{request.idea.strip()}\n\n"
+            f"Vulnerabilities:\n{json.dumps([item.model_dump() for item in vulnerabilities], ensure_ascii=False)}"
+        )
+        strategist_raw = await call_llm(
+            request.models.strategistModel,
+            STRATEGIST_PROMPT,
+            strategist_query,
+        )
+        strategist_think, strategist_content = extract_think(strategist_raw)
+        mitigations = _build_mitigations(
+            parse_json_array(
+                strategist_content,
+                fallback=[
+                    {
+                        "description": "Re-run the critique with more concrete scope and success criteria.",
+                        "effort": "Low",
+                    }
+                ],
+            )
+        )
+
+        strategist_risk_score = _parse_strategist_risk_score(strategist_content)
 
         return ValidatorResponse(
-            idea=request.idea,
-            assumptions=parsed_assumptions,
-            vulnerabilities=parsed_vulns,
-            mitigations=parsed_mits,
-            overallRiskScore=overall_risk,
+            idea=request.idea.strip(),
+            assumptions=assumptions,
+            vulnerabilities=vulnerabilities,
+            mitigations=mitigations,
+            overallRiskScore=_calculate_overall_risk(vulnerabilities, strategist_risk_score),
             analyzerThink=analyzer_think,
-            redTeamThink=redteam_think,
-            strategistThink=strategist_think
+            redTeamThink=red_team_think,
+            strategistThink=strategist_think,
         )
 
-    except Exception as e:
-        logger.error(f"Validator evaluation failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Validator evaluation failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
