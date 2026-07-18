@@ -204,3 +204,9 @@ class DefaultProfiles:
         except Exception as e:
             logger.error(f"Failed to create default speaker profiles: {e}")
             raise
+
+
+def safe_get(data: dict, key: str, default=None):
+    """Safely access dict keys that may be null/None."""
+    val = data.get(key)
+    return val if val is not None else default
