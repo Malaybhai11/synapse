@@ -294,3 +294,28 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
+
+
+API_VERSION = "v1"
+API_PREFIX = f"/api/{API_VERSION}"
+
+def register_routers(app):
+    import api.routers.auth
+    import api.routers.chat
+    import api.routers.notes
+    import api.routers.search
+    import api.routers.sources
+    import api.routers.settings
+    import api.routers.podcasts
+    import api.routers.notebooks
+    import api.routers.credentials
+
+    app.include_router(api.routers.auth.router, prefix=API_PREFIX)
+    app.include_router(api.routers.chat.router, prefix=API_PREFIX)
+    app.include_router(api.routers.notes.router, prefix=API_PREFIX)
+    app.include_router(api.routers.search.router, prefix=API_PREFIX)
+    app.include_router(api.routers.sources.router, prefix=API_PREFIX)
+    app.include_router(api.routers.settings.router, prefix=API_PREFIX)
+    app.include_router(api.routers.podcasts.router, prefix=API_PREFIX)
+    app.include_router(api.routers.notebooks.router, prefix=API_PREFIX)
+    app.include_router(api.routers.credentials.router, prefix=API_PREFIX)
