@@ -443,3 +443,43 @@ def chunk_text(
 
     logger.debug(f"Created {len(chunks)} chunks from {len(text)} characters")
     return chunks
+
+
+
+def chunk_with_overlap(text: str, chunk_size: int = 500, overlap: int = 50) -> list[str]:
+    """Split text into chunks with token overlap for better context continuity."""
+    if not text:
+        return []
+    words = text.split()
+    if len(words) <= chunk_size:
+        return [text]
+    chunks = []
+    start = 0
+    while start < len(words):
+        end = min(start + chunk_size, len(words))
+        chunks.append(" ".join(words[start:end]))
+        start += chunk_size - overlap
+    return chunks
+
+
+def merge_chunks(chunks: list[str], separator: str = " ") -> str:
+    """Merge chunked text back while preserving original word order."""
+    if not chunks:
+        return ""
+    if len(chunks) == 1:
+        return chunks[0]
+    # Deduplicate overlap region when merging
+    overlap_size = 50
+    merged = list(chunks[0].split())
+    for chunk in chunks[1:]:
+        chunk_words = chunk.split()
+        if len(merged) >= overlap_size:
+            overlap_region = set(merged[-overlap_size:])
+            # Skip words that are already in the overlap
+            for w in chunk_words:
+                if w not in overlap_region:
+                    merged.append(w)
+                overlap_region.discard(w)
+        else:
+            merged.extend(chunk_words)
+    return separator.join(merged)
